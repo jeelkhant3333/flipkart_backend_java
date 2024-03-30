@@ -8,7 +8,7 @@ public class Address {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private long addressId;
     private String firstName;
     private String lastName;
     private String streetAddress;
@@ -25,7 +25,7 @@ public class Address {
     }
 
     public Address(
-            long id,
+            long addressId,
             String firstName,
             String lastName,
             String streetAddress,
@@ -34,7 +34,7 @@ public class Address {
             String zipCode,
             User user,
             String mobile) {
-        this.id = id;
+        this.addressId = addressId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.streetAddress = streetAddress;
@@ -45,12 +45,12 @@ public class Address {
         this.mobile = mobile;
     }
 
-    public long getId() {
-        return id;
+    public long getAddressId() {
+        return addressId;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setAddressId(long addressId) {
+        this.addressId = addressId;
     }
 
     public String getFirstName() {
