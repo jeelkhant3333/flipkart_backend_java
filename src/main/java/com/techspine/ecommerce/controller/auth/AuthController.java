@@ -60,6 +60,7 @@ public class AuthController {
 
 //        set all data for new user
         newUser.setEmail(email);
+
 //        set hasConverted password
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setFirstName(firstName);

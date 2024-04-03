@@ -6,8 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 
+
+
 public interface CategoryRepository extends JpaRepository<Category,Long> {
     Category findByName(String category);
+
     @Query("Select c from Category c Where c.name= :name And c.parentCategory.name= :parentCategoryName")
     Category findByNameAndParent(@Param("name") String name, @Param("parentCategoryName") String parentCategoryName);
 
