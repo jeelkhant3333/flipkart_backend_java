@@ -1,4 +1,4 @@
-package com.techspine.ecommerce.controller.auth;
+package com.techspine.ecommerce.controller;
 
 import com.techspine.ecommerce.entity.User;
 import com.techspine.ecommerce.exception.UserException;
@@ -60,7 +60,6 @@ public class AuthController {
 
 //        set all data for new user
         newUser.setEmail(email);
-
 //        set hasConverted password
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setFirstName(firstName);
