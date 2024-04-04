@@ -30,9 +30,10 @@ public class UserServiceImpl implements com.techspine.ecommerce.service.user.Use
     }
 
     @Override
-    public User findUserProfileById(String jwt) throws UserException {
+    public User findUserProfileByJwt(String jwt) throws UserException {
         String email = jwtProvider.getEmailFromJwt(jwt);
-        User  user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email);
+
 
         if (user==null){
             throw new UserException("User Not Found");

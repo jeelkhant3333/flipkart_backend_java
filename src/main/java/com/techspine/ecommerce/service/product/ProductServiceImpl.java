@@ -110,6 +110,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> findProductByCategory(String category) {
+
         return null;
     }
 
@@ -138,5 +139,10 @@ public class ProductServiceImpl implements ProductService {
         List<Product> pageContent = products.subList(startIndex,endIndex);
 
         return new PageImpl<>(pageContent,pageable, products.size());
+    }
+
+    @Override
+    public List<Product> findAllProducts() {
+        return productRepository.findAll();
     }
 }
