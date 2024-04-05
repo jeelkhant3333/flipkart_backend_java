@@ -1,5 +1,6 @@
 package com.techspine.ecommerce.controller;
 
+import com.techspine.ecommerce.entity.Cart;
 import com.techspine.ecommerce.entity.User;
 import com.techspine.ecommerce.exception.UserException;
 import com.techspine.ecommerce.repository.UserRepository;
@@ -7,6 +8,7 @@ import com.techspine.ecommerce.request.LoginRequest;
 import com.techspine.ecommerce.response.AuthResponse;
 import com.techspine.ecommerce.security.JwtProvider;
 import com.techspine.ecommerce.service.CustomUserServiceImpl;
+import com.techspine.ecommerce.service.cart.CartService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,89 +30,68 @@ public class AuthController {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserServiceImpl customUserService;
+    private final CartService cartService;
 
-    public AuthController(UserRepository userRepository, JwtProvider jwtProvider, CustomUserServiceImpl customUserService, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.jwtProvider = jwtProvider;
-        this.customUserService = customUserService;
-        this.passwordEncoder = passwordEncoder;
+    AuthController( CartService cartService,UserRepository userRepository,PasswordEncoder passwordEncoder,CustomUserServiceImpl customUserService,JwtProvider jwtProvider){
+        this.userRepository=userRepository;
+        this.passwordEncoder=passwordEncoder;
+        this.customUserService=customUserService;
+        this.jwtProvider=jwtProvider;
+        this.cartService=cartService;
     }
 
-
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> registerUserHandler(@RequestBody User user) throws UserException {
+    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody User user) throws UserException{
+        String email=user.getEmail();
+        String password=user.getPassword();
+        String firstName= user.getFirstName();
+        String lastName= user.getLastName();
 
-
-//        get user from signup page
-        String email = user.getEmail();
-        String password = user.getPassword();
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
-
-//        check if email is already exist in
-        User isEmailExist = userRepository.findByEmail(email);
-
-//        check user is existed then throw exception
-        if (isEmailExist != null) {
-            throw new UserException("Email is already registered with another account");
+        User isEmailExist=userRepository.findByEmail(email);
+        if(isEmailExist!=null){
+            throw new UserException("This email is already used with another account.");
         }
+        User createdUser=new User();
+        createdUser.setEmail(email);
+        createdUser.setPassword(passwordEncoder.encode(password));
+        createdUser.setFirstName(firstName);
+        createdUser.setLastName(lastName);
 
-//        here user is not exist then we have to create new user
-        User newUser = new User();
+        User savedUser=userRepository.save(createdUser);
+        Cart cart=cartService.createCart(savedUser);
 
-//        set all data for new user
-        newUser.setEmail(email);
-//        set hasConverted password
-        newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setFirstName(firstName);
-        newUser.setLastName(lastName);
-
-        User saveUser = userRepository.save(newUser);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(newUser.getEmail(), newUser.getPassword());
+        Authentication authentication=new UsernamePasswordAuthenticationToken(savedUser.getEmail(),savedUser.getPassword());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-//        Generate Jwt Token
-        String token = jwtProvider.generateToken(authentication);
-
-//        return token as response
-        AuthResponse authResponse = new AuthResponse();
+        String token=jwtProvider.generateToken(authentication);
+        AuthResponse authResponse=new AuthResponse();
         authResponse.setJwt(token);
-        authResponse.setMessage("Sign Up Success");
-
-        return new ResponseEntity<AuthResponse>(authResponse, HttpStatus.CREATED);
+        authResponse.setMessage("Signup Success...");
+        return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse> loginUserHandler(@RequestBody LoginRequest loginRequest) throws UserException {
-        String username = loginRequest.getEmail();
-        String password = loginRequest.getPassword();
+    public ResponseEntity<AuthResponse> loginUserHandler(@RequestBody LoginRequest loginRequest){
+        String username= loginRequest.getEmail();
+        String password= loginRequest.getPassword();
 
-        Authentication authentication = authenticate(username,password);
+        Authentication authentication=authenticate(username,password);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token = jwtProvider.generateToken(authentication);
-
-//        return token as response
-        AuthResponse authResponse = new AuthResponse();
+        String token=jwtProvider.generateToken(authentication);
+        AuthResponse authResponse=new AuthResponse();
         authResponse.setJwt(token);
-        authResponse.setMessage("Sign In Success");
-
-        return new ResponseEntity<AuthResponse>(authResponse, HttpStatus.CREATED);
+        authResponse.setMessage("Signin Success...");
+        return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
     }
 
     private Authentication authenticate(String username, String password) {
-
-        UserDetails userDetails = customUserService.loadUserByUsername(username);
-
-        if (username == null){
-            throw new BadCredentialsException("Invalid Email");
+        UserDetails userDetails=customUserService.loadUserByUsername(username);
+        if(userDetails==null){
+            throw new BadCredentialsException("Invalid username...");
         }
-
-        if (!passwordEncoder.matches(password,userDetails.getPassword())){
-            throw new BadCredentialsException("Invalid Password");
+        if(!passwordEncoder.matches(password,userDetails.getPassword())){
+            throw new BadCredentialsException("Invalid password...");
         }
-
         return new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
     }
 }

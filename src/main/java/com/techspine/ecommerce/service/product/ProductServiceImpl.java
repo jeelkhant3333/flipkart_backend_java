@@ -7,7 +7,6 @@ import com.techspine.ecommerce.repository.CategoryRepository;
 import com.techspine.ecommerce.repository.ProductRepository;
 import com.techspine.ecommerce.request.CreateProductRequest;
 import com.techspine.ecommerce.service.user.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +25,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
-    @Autowired
     public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, UserService userService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
@@ -42,6 +40,7 @@ public class ProductServiceImpl implements ProductService {
             topLevelCategory.setName(req.getTopLevelCategory());
             topLevelCategory.setLevel(1);
             topLevel = categoryRepository.save(topLevelCategory);
+
         }
 
         Category secondLevel = categoryRepository.findByNameAndParent(req.getSecondLevelCategory(),topLevel.getName());
@@ -49,6 +48,7 @@ public class ProductServiceImpl implements ProductService {
             Category secondLevelCategory = new Category();
             secondLevelCategory.setName(req.getSecondLevelCategory());
             secondLevelCategory.setParentCategory(topLevel);
+
             secondLevelCategory.setLevel(2);
             secondLevel = categoryRepository.save(secondLevelCategory);
         }
@@ -76,7 +76,9 @@ public class ProductServiceImpl implements ProductService {
         product.setCategory(thirdLevel);
         product.setCreatedAt(LocalDateTime.now());
 
-        return productRepository.save(product);
+        Product savedProduct=productRepository.save(product);
+        System.out.println("Product" + savedProduct);
+        return savedProduct;
     }
 
     @Override
