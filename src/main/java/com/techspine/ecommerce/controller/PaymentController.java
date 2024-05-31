@@ -8,7 +8,6 @@ import com.techspine.ecommerce.entity.Order;
 import com.techspine.ecommerce.exception.OrderException;
 import com.techspine.ecommerce.exception.UserException;
 import com.techspine.ecommerce.repository.OrderRepository;
-import com.techspine.ecommerce.response.ApiResponse;
 import com.techspine.ecommerce.response.PaymentLinkResponse;
 import com.techspine.ecommerce.service.order.OrderService;
 import com.techspine.ecommerce.service.user.UserService;
@@ -62,54 +61,55 @@ public class PaymentController {
         }
     }
 
-
-    public ResponseEntity<ApiResponse> updatePayment(
-            @RequestParam(name="payment_id")String paymentId,
-            @RequestParam(name = "order_id")Long orderId
+    @GetMapping("/payments")
+    public ResponseEntity<Order> updatePayment(
+            @RequestParam (name = "payment_id") String paymentId,
+            @RequestParam(name = "order_id") Long orderId
     ) throws OrderException, RazorpayException {
-        RazorpayClient razorpayClient = new RazorpayClient("rzp_test_ciGrICfYaUWuGT", "OGdcN1KEHrkMQN");
+        RazorpayClient razorpayClient = new RazorpayClient("rzp_test_GxrdUt2fPKV4Q0", "fn2MP5OJHw3NAv0zteomIQOA");
         Order order = orderService.findOrderById(orderId);
 
-        try{
+        try {
             Payment orderPayment = razorpayClient.payments.fetch(paymentId);
 
-            if(orderPayment.get("status").equals("captured")){
+            if (orderPayment.get("status").equals("captured")) {
                 order.setOrderStatus("PLACED");
                 order.getPaymentDetails().setPaymentId(paymentId);
                 order.getPaymentDetails().setStatus("COMPLETED");
+
                 orderRepository.save(order);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        ApiResponse response = new ApiResponse();
-        response.setMessage("Your Order IS Placed");
-        response.setStatus(true);
+//        ApiResponse response = new ApiResponse();
+//        response.setMessage("Your Order IS Placed");
+//        response.setStatus(true);
 
-        return new ResponseEntity<ApiResponse>(response,HttpStatus.OK);
+        return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
     @NotNull
     private static JSONObject getPaymentLinkRequest(Order order) {
         JSONObject paymentLinkRequest = new JSONObject();
-        paymentLinkRequest.put("amount" , order.getTotalDiscountedPrice()*100);
-        paymentLinkRequest.put("currency","INR");
+        paymentLinkRequest.put("amount", order.getTotalDiscountedPrice() * 100);
+        paymentLinkRequest.put("currency", "INR");
 
         JSONObject customer = new JSONObject();
-        customer.put("name" , order.getUser().getFirstName());
+        customer.put("name", order.getUser().getFirstName());
         customer.put("contact", order.getUser().getMobile());
         customer.put("email", order.getUser().getEmail());
 
-        paymentLinkRequest.put("customer",customer);
+        paymentLinkRequest.put("customer", customer);
 
         JSONObject notify = new JSONObject();
-        notify.put("SMS",true);
-        notify.put("email",true);
+        notify.put("SMS", true);
+        notify.put("email", true);
 
-        paymentLinkRequest.put("notify",notify);
-        paymentLinkRequest.put("callback_url","http://localhost:4200/payment-success?order_id="+ order.getOrderId());
-        paymentLinkRequest.put("callback_method","get");
+        paymentLinkRequest.put("notify", notify);
+        paymentLinkRequest.put("callback_url", "http://localhost:4200/payment-success?order_id=" + order.getOrderId());
+        paymentLinkRequest.put("callback_method", "get");
         return paymentLinkRequest;
     }
 }
